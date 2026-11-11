@@ -1,0 +1,43 @@
+# 字节码与缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# 测试与覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# 运行期产物
+reports/*.md
+!reports/.gitkeep
+traces/
+*.trace.jsonl
+
+# 本地模型与临时文件
+.ollama/
+*.log
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 环境变量（可能含密钥）
+.env
+.env.local
