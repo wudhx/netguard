@@ -1,0 +1,32 @@
+sysname EDGE-ACCESS-01
+#
+vlan batch 200 to 210
+#
+interface GigabitEthernet0/0/1
+ description To_Aggregation
+ port link-type trunk
+ port trunk allow-pass vlan 200 to 210
+#
+interface GigabitEthernet0/0/2
+ port link-type access
+ port default vlan 201
+#
+interface Vlanif201
+ ip address 172.20.1.1 255.255.255.0
+#
+ospf 2
+ area 0.0.0.5
+  network 172.20.1.0 0.0.0.255
+#
+acl number 2000
+ rule 5 permit source 172.20.1.0 0.0.0.255
+#
+acl number 2001
+ rule 5 deny source 172.20.1.0 0.0.0.255
+ rule 10 permit
+#
+snmp-agent community read public
+#
+undo telnet server enable
+#
+return

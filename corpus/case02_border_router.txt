@@ -1,0 +1,67 @@
+sysname ISP-BORDER-01
+#
+version 5.170
+#
+vlan batch 10 20 30 to 35 100
+#
+ip vpn-instance VPN_CORP
+ ipv4-family
+#
+interface GigabitEthernet0/0/1
+ description Uplink_To_ISP
+ ip address 202.96.128.1 255.255.255.252
+ traffic-filter inbound acl 3001
+#
+interface GigabitEthernet0/0/2
+ description LAN_Core
+ ip address 10.10.10.1 255.255.255.252
+ ospf enable 1 area 0.0.0.0
+#
+interface GigabitEthernet0/0/3
+ shutdown
+ description Unused_Port
+#
+interface GigabitEthernet0/0/4
+ port link-type trunk
+ port trunk allow-pass vlan 10 20 30 to 35
+#
+interface GigabitEthernet0/0/5
+ port link-type access
+ port default vlan 100
+#
+interface Vlanif100
+ ip address 10.100.0.1 255.255.255.0
+ description Mgmt_Vlan
+#
+ospf 1 router-id 1.1.1.1
+ area 0.0.0.0
+  network 10.10.10.0 0.0.0.3
+  network 10.100.0.0 0.0.0.255
+ area 0.0.0.1
+  network 10.100.0.0 0.0.0.255
+#
+acl number 3001
+ rule 5 deny tcp source 10.10.10.0 0.0.0.255 destination 202.96.128.1 0.0.0.0 destination-port eq 80
+ rule 10 deny ip source 10.100.0.0 0.0.0.255
+ rule 20 permit ip source 10.100.0.0 0.0.0.255
+ rule 30 permit ip
+#
+acl number 3002
+ rule 5 deny ip
+#
+acl number 3003
+#
+ip route-static 0.0.0.0 0.0.0.0 202.96.128.2
+ip route-static 172.16.0.0 255.255.0.0 10.10.10.2 preference 60
+ip route-static 192.168.0.0 255.255.255.0 GigabitEthernet0/0/2
+#
+telnet server enable
+#
+snmp-agent community read cipher %^%#abc123%^%#
+snmp-agent community write private
+#
+user-interface vty 0 4
+ authentication-mode aaa
+ protocol inbound all
+#
+return

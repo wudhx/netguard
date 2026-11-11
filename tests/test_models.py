@@ -169,7 +169,7 @@ class TestConfigHelpers:
     def _cfg(self) -> Config:
         cfg = Config(device_id="dev1", hostname="CORE-1")
         cfg.interfaces["GE0/0/1"] = Interface(
-            name="GE0/0/1", ip="10.1.1.1", mask="255.255.255.0", ospf_area=0
+            name="GE0/0/1", ip="10.1.1.1", mask="255.255.255.0", ospf_area="0"
         )
         cfg.interfaces["GE0/0/2"] = Interface(name="GE0/0/2")  # 二层口
         cfg.interfaces["Vlanif10"] = Interface(

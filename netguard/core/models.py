@@ -162,12 +162,16 @@ class Interface:
     mask: str | None = None
     admin_up: bool = True
     description: str | None = None
-    ospf_area: int | None = None
+    # 区域号在 VRP 中既可写 `0` 也可写 `0.0.0.0`，统一按原始字符串保留，
+    # 归一化比较交给规则层（不要在这里悄悄改写，否则追溯原始配置会对不上）。
+    ospf_area: str | None = None
+    ospf_process: int | None = None
     acl_in: str | None = None
     acl_out: str | None = None
     link_type: str | None = None
     access_vlan: int | None = None
     trunk_allow: list[int] = field(default_factory=list)
+    line_no: int | None = None
 
     @property
     def has_ip(self) -> bool:
@@ -185,11 +189,13 @@ class Interface:
             "admin_up": self.admin_up,
             "description": self.description,
             "ospf_area": self.ospf_area,
+            "ospf_process": self.ospf_process,
             "acl_in": self.acl_in,
             "acl_out": self.acl_out,
             "link_type": self.link_type,
             "access_vlan": self.access_vlan,
             "trunk_allow": list(self.trunk_allow),
+            "line_no": self.line_no,
         }
 
 
@@ -288,6 +294,9 @@ class Config:
     acls: dict[str, Acl] = field(default_factory=dict)
     static_routes: list[StaticRoute] = field(default_factory=list)
     acl_bindings: list[AclBinding] = field(default_factory=list)
+    vlans: set[int] = field(default_factory=set)
+    telnet_enabled: bool = False
+    snmp_communities: list[str] = field(default_factory=list)
     has_vrf: bool = False
     raw_lines: list[str] = field(default_factory=list)
 
@@ -306,7 +315,7 @@ class Config:
         """
         iface = self.interfaces.get(iface_name)
         if iface is not None and iface.ospf_area is not None:
-            return str(iface.ospf_area)
+            return iface.ospf_area
         return None
 
     def areas_declaring(self, iface: Interface) -> list[str]:
