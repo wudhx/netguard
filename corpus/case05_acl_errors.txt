@@ -1,0 +1,19 @@
+sysname TEST-ACL-ERRORS
+#
+interface GigabitEthernet0/0/1
+ ip address 10.0.0.1 255.255.255.0
+ traffic-filter inbound acl 3001
+#
+interface GigabitEthernet0/0/2
+ ip address 10.0.1.1 255.255.255.0
+ traffic-filter inbound acl 3002
+#
+acl number 3001
+#
+acl number 3002
+ rule 5 deny ip
+#
+acl number 3003
+ rule 5 deny ip source 10.0.0.0 0.0.255.0
+#
+return

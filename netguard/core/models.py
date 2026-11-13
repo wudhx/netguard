@@ -73,14 +73,24 @@ class RuleMeta:
     applies_to: frozenset[Role]
     doc_ref: str
     known_fp: str = ""
+    # 误报是「规则内部可自动规避」还是「只能打标记给人看」。
+    #
+    # 架构 §5.1 的硬约束原文是「known_fp 非空时 severity 最高只能 LOW」，
+    # 但同一份文档 §5.6 要求 OSPF-001（HIGH）与 IF-001 登记 VRF 误报，
+    # 且 §5.1 自身的示例代码就写了 severity=HIGH + known_fp 非空。
+    # 两处冲突。取 §5.6 的表述为准，因为它更具体：
+    #   - fp_mitigated=True：规则检测到触发条件后会在运行期降级（如 VRF 场景降 INFO），
+    #     因此元数据里保留真实严重度是安全的
+    #   - fp_mitigated=False：规则无法自动判定，只能提示人工复核，此时严重度必须降下来
+    fp_mitigated: bool = False
     examples: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        # 硬约束：带已知误报说明的规则，严重度最高只能到 LOW（架构 §5.1）
-        if self.known_fp and self.severity.value > Severity.LOW.value:
+        if self.known_fp and not self.fp_mitigated and self.severity.value > Severity.LOW.value:
             raise ValueError(
-                f"规则 {self.id} 声明了 known_fp，severity 最高只能为 LOW，"
-                f"当前为 {self.severity.name}"
+                f"规则 {self.id} 声明了无法自动规避的 known_fp，"
+                f"severity 最高只能为 LOW，当前为 {self.severity.name}。"
+                f"若规则已在运行期自行降级，请显式设置 fp_mitigated=True。"
             )
 
     def applies_to_role(self, role: Role) -> bool:
@@ -106,7 +116,6 @@ class RuleMeta:
             "known_fp": self.known_fp,
         }
 
-
 @dataclass
 class Finding:
     """一条发现项。
@@ -126,10 +135,14 @@ class Finding:
     line_no: int | None = None
     hint: str | None = None
 
+    #: 证据片段上限（含截断省略号）。超长证据会把报告撑爆，也不便于人读。
+    EVIDENCE_LIMIT = 200
+
     def __post_init__(self) -> None:
-        # 证据片段限长，防止整段配置被塞进报告
-        if len(self.evidence) > 200:
-            self.evidence = self.evidence[:200] + "…"
+        # 截断后总长必须仍 <= 上限，故留出省略号的位置。
+        # 早期实现写 [:200] + "…" 会变成 201 字符，测试当场抓到了这个差一。
+        if len(self.evidence) > self.EVIDENCE_LIMIT:
+            self.evidence = self.evidence[: self.EVIDENCE_LIMIT - 1] + "…"
 
     @property
     def key(self) -> str:

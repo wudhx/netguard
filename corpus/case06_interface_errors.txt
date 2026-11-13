@@ -1,0 +1,27 @@
+sysname TEST-IF-ERRORS
+#
+interface Vlanif10
+ ip address 10.1.1.1 255.255.255.0
+#
+interface Vlanif20
+ ip address 10.1.1.1 255.255.255.0
+#
+interface Vlanif30
+ ip address 192.168.1.10 255.255.0.0
+#
+interface Vlanif40
+ ip address 192.168.2.10 255.255.0.0
+#
+interface LoopBack0
+#
+interface Vlanif50
+ ip address 10.9.9.5 255.0.255.0
+#
+interface Vlanif60
+ ip address 10.20.0.0 255.255.255.0
+#
+interface GigabitEthernet0/0/1
+ port link-type access
+ port default vlan 10
+#
+return

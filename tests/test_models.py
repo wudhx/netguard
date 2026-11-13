@@ -129,12 +129,18 @@ class TestFinding:
         assert f.key == "ACL-001@interface GE0/0/1"
 
     def test_evidence_truncated(self) -> None:
+        """截断后总长不得超过上限（省略号算在额度内）。
+
+        早期实现写的是 `evidence[:200] + "…"`，总长变成 201，
+        超出声明的 200 上限——这条断言就是抓这个差一的。
+        """
         f = Finding(
             rule_id="X", severity=Severity.LOW, nature=Nature.DEFECT,
             location="l", message="m", evidence="A" * 500, basis="b",
         )
-        assert len(f.evidence) == 201  # 200 + 省略号
+        assert len(f.evidence) == Finding.EVIDENCE_LIMIT
         assert f.evidence.endswith("…")
+        assert not f.evidence.endswith("……")
 
     def test_evidence_short_untouched(self) -> None:
         f = Finding(
